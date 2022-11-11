@@ -37,13 +37,13 @@ def new_dir(SERVER_FILE, name, working_file):
     os.makedirs(working_dir + "/plot", exist_ok=True)
     Path(working_dir + "/about.json").touch() #comentar
 
-    # "churn_segment" : [porcentaje1, porcentaje2],
+    # "churn_segment" : [porcentaje1, porcentaje2, porcentaje3],
     # sort growing / decreasing
     # "group" : [{"name" : "uno",  "percentage": 20}]
     about = {
-        "churn_segment" : [20, 50],
+        "churn_segment" : [20, 50, 70],
         "sort" : "growing",
-        "group" : []
+        "group" : [{"name": "uno", "percentage": 20}, {"name": "dos", "percentage": 30}, {"name": "tres", "percentage": 50}]
     }
 
     write_json_file(working_dir + "/about.json", about)
