@@ -1,1 +1,4 @@
 uploads/
+*csv
+server.json
+__pycache__
