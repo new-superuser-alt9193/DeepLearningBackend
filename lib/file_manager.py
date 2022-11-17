@@ -1,20 +1,8 @@
 import os
-from pathlib import Path
 import json
 
-def get_server_dir(SERVER_FILE):
-    return os.path.dirname(os.path.realpath(SERVER_FILE))
-
-def write_server_file(SERVER_FILE, working_file, working_dir):
-    working_data = {
-        "working_file" : working_file,
-        "working_dir" : working_dir,
-        
-    }
-
-    server_file = get_server_dir(SERVER_FILE) + "/server.json"
-    with open(server_file, 'w') as outfile:
-        json.dump(working_data, outfile)
+# Utilidades para manejar los jsons
+# -----------------------------------------------
 
 def write_json_file(json_file, data):
     with open(json_file + "", 'w') as outfile:
@@ -32,10 +20,27 @@ def rewrite_json_file(json_file, attribute, new_data):
     data[attribute] = new_data
     write_json_file(json_file, data)
 
+# Utilidades para el servidor
+# -----------------------------------------------
+def get_server_dir(SERVER_FILE):
+    return os.path.dirname(os.path.realpath(SERVER_FILE))
+
+def write_server_file(SERVER_FILE, working_file, working_dir):
+    working_data = {
+        "working_file" : working_file,
+        "working_dir" : working_dir,
+        
+    }
+
+    server_file = get_server_dir(SERVER_FILE) + "/server.json"
+    with open(server_file, 'w') as outfile:
+        json.dump(working_data, outfile)
+        
+# Utilidad para manejar un nuevo projecto
+# -----------------------------------------------
 def new_dir(SERVER_FILE, name, working_file):
     working_dir = get_server_dir(SERVER_FILE) + "/uploads/" + name
-    os.makedirs(working_dir + "/plot", exist_ok=True)
-    Path(working_dir + "/about.json").touch() #comentar
+    os.makedirs(working_dir, exist_ok=True)
 
     # "churn_segment" : [porcentaje1, porcentaje2, porcentaje3],
     # sort growing / decreasing
@@ -43,7 +48,7 @@ def new_dir(SERVER_FILE, name, working_file):
     about = {
         "churn_segment" : [20, 50, 70],
         "sort" : "growing",
-        "group" : [{"name": "uno", "percentage": 20}, {"name": "dos", "percentage": 30}, {"name": "tres", "percentage": 50}]
+        "group" : []
     }
 
     write_json_file(working_dir + "/about.json", about)
