@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from waitress import serve
 
@@ -21,6 +21,10 @@ def get_about():
     server = update_server()
     return server["working_dir"] + "/about.json"
 
+def get_working_dir():
+    server = update_server()
+    return server["working_dir"]
+
 
 # ///////////////////////////////////////////////
 
@@ -34,9 +38,10 @@ def hello_world():
 # Pasas el nombre del arcivo, y la ubicacion donde se encuentra
 # Ejemplo
 # /upload/hola/%20/mundo
-@app.route('/upload/<string:name>/<path:working_file>')
-def upload(name, working_file):
-    fm.new_dir(SERVER_FILE, name, working_file) #comentar
+@app.route('/upload/<string:name>', methods=['POST'])
+def upload(name):
+    json_data = request.get_json()
+    fm.new_dir(SERVER_FILE, name, json_data)
     return code_200()
 
 # Obtiene la ubicacion del csv con el que se esta trabajando
@@ -56,11 +61,7 @@ def get_grupo_list():
 # ...............................................
 @app.route('/cluster/<string:name>')
 def get_cluster(name):
-    return jsonify({"perfil" : []})
-
-@app.route('/cluster/<string:name>/perfil/<string:perfil>')
-def get_perfil_from_cluster(name, perfil):
-    return jsonify({})
+    return jsonify({"perfil" : fm.read_json_file(get_working_dir()+ "/cluster/" + name + "/perfil.json")})
 
 # ...............................................
 # [x1, x2, x3]

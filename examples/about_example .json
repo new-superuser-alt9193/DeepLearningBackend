@@ -1,0 +1,1 @@
+{"churn_segment": [20, 50, 70], "sort": "growing", "group": [{"name": "uno", "percentage": 20}, {"name": "dos", "percentage": 30}, {"name": "tres", "percentage": 50}]}
