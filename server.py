@@ -67,6 +67,11 @@ def get_cluster(name):
 # [x1, x2, x3]
 @app.route('/set_churn_segment/<int:x1>/<int:x2>/<int:x3>')
 def set_churn_segment(x1, x2, x3):
+    x1 = float(x1)/100
+    x2 = float(x2)/100
+    x3 = float(x3)/100
+
+    fm.set_churn_segment(x1, x2, x3, get_working_dir())
     fm.rewrite_json_file(get_about(), "churn_segment", [x1, x2, x3])
     return code_200()
 

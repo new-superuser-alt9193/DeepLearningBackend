@@ -49,6 +49,20 @@ def write_server_file(SERVER_FILE, working_dir):
     server_file = get_server_dir(SERVER_FILE) + "/server.json"
     write_json_file(server_file, working_data)
 
+# Utilidad para generar los perfiles de todos los cluster
+# -----------------------------------------------
+def set_churn_segment(x1, x2, x3, working_dir):
+
+    clusters_dir = working_dir + "/cluster/"
+    clusters = os.listdir(clusters_dir)
+
+    for i in clusters:
+        model.make_perfiles(clusters_dir + i, x1, x2, x3)
+    
+    for i in clusters:
+        cluster = clusters_dir + i
+        write_json_file(cluster + "/perfil.json", model.make_perfiles_info(cluster))
+
 # Utilidad para manejar un nuevo projecto
 # -----------------------------------------------
 def new_dir(SERVER_FILE, name, data):
@@ -72,9 +86,4 @@ def new_dir(SERVER_FILE, name, data):
 
     write_json_file(working_dir + "/about.json", about)
 
-    for i in clusters:
-        model.make_perfiles(i, .20,.50, .70)
-    
-    for i in clusters:
-        # print(model.make_perfiles_info(i))
-        write_json_file(i + "/perfil.json", model.make_perfiles_info(i))
+    set_churn_segment(20, 50, 70, working_dir)
