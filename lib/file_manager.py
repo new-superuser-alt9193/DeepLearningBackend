@@ -81,7 +81,7 @@ def new_dir(SERVER_FILE, name, data):
     about = {
         "churn_segment" : [.20, .50, .70],
         "sort" : "growing",
-        "group" : []
+        "group" : clusters
     }
 
     write_json_file(working_dir + "/about.json", about)
