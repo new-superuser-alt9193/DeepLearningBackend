@@ -32,7 +32,8 @@ def json_to_csv(data, csv_file):
 
     # Informacion de columnas
     for row in data["rows"][1:]:
-        csv_writer.writerow(row)
+        if row != [""]:
+            csv_writer.writerow(row)
     data_file.close()
 
 # Utilidades para el servidor
