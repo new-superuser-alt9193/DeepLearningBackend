@@ -13,6 +13,13 @@ from joblib import load
 
 import random
 
+import pandas as pd
+import dask.dataframe as dd
+from dask_ml import preprocessing
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+target = ["TARGET", "Target", "target", "CHURN", "Churn", "churn", "RESULT", "Result", "result"]
 # ///////////////////////////////////////////////
 #get K value for K Means
 def getK(x):
@@ -86,6 +93,54 @@ def showProbabilities(low,mid,high, proba_matrix, x):
     return clients_permanent, clients_low, clients_mid, clients_high
 
 # -----------------------------------------------
+# Obtiene una lista con las columnas categoricas a partir de una diferencia de conjuntos
+def getCategoricalColumns(df):
+    cols = set(df.columns)
+    numColumns = set(df._get_numeric_data().columns)
+    
+    return list(cols - numColumns)
+
+# Convierte las variables categoricas en numericas en base a label encoding
+def getNumericDataset(df):
+    categoricalColumns = getCategoricalColumns(df)
+    numDataset = df.drop(columns= categoricalColumns)
+    categoricalDataset = df[categoricalColumns]
+
+    le = preprocessing.LabelEncoder()
+    for i in categoricalColumns:
+        categoricalDataset[i] = le.fit_transform(categoricalDataset[i])
+    
+    for i in categoricalColumns:
+        numDataset[i] = categoricalDataset[i]
+    
+    return numDataset
+
+def scaler(df):
+    scaler = StandardScaler()
+    return scaler.fit_transform(df)
+
+def reduce_csv(csv_file):
+    df = dd.read_csv(csv_file)
+    result = df[df.columns.intersection(target)]
+    df = df.drop(columns= target + ["Unnamed: 0"], errors='ignore')
+    
+    x = getNumericDataset(df)
+    columns = list(x.columns)
+    x = scaler(x)
+    
+    pca = PCA(n_components=.8, svd_solver='full')
+    pca.fit(x)
+
+    reduced = []
+    for i in range(0, len(pca.explained_variance_ratio_)):
+        print(i)
+        reduced.append(columns[i])   
+
+    result[reduced] = df[reduced]
+
+    result.to_csv(csv_file, index=False, single_file=True)
+
+# -----------------------------------------------
 def make_clusters(file_path, file_name):
     if True:
         df = dd.read_csv(file_path + "/" + file_name + ".csv")
@@ -99,9 +154,9 @@ def make_clusters(file_path, file_name):
         return [{"name": "cluster_1", "percentage": 25}, {"name": "cluster_2", "percentage": 25}, {"name": "cluster_3", "percentage": 25}, {"name": "cluster_4", "percentage": 25}]
     else:
         df = dd.read_csv(file_path + "/" + file_name + ".csv")
-        df = df.drop(columns=["Unnamed: 0"])
+        df = df.drop(columns=["Unnamed: 0"], errors='ignore')
 
-        x = np.array(df.drop(columns=['TARGET']))
+        x = np.array(df.drop(columns=target, errors='ignore'))
 
         distortions = []
         inertias = []
@@ -128,7 +183,7 @@ def make_clusters(file_path, file_name):
         clusters = pd.DataFrame(data = {'cluster': y_km})
 
         # Une la clasificacion con los datos del dataset
-        df_clusters = dd.merge(clusters, df.drop(columns=['TARGET']), left_index=True, right_index=True)
+        df_clusters = dd.merge(clusters, df.drop(columns=target, errors='ignore'), left_index=True, right_index=True)
 
         df_clusters = dd.merge(df_clusters, df[['TARGET']], left_index=True, right_index=True)
 
@@ -150,13 +205,13 @@ def make_clusters(file_path, file_name):
 
 # cluster: archivo csv donde se encuentra un cluster
 # cs1, cs2, cs3: rangos de churn segment
-def make_perfiles(cluster, cs1, cs2, cs3):
+def make_perfiles(cluster, cs1, cs2, cs3, model_file):
     # Lee el cluster
     df = pd.read_csv(cluster + "/cluster.csv")
-    x = df.drop(columns=['TARGET', 'Unnamed: 0'])
+    x = df.drop(columns= target + ['Unnamed: 0'], errors='ignore')
 
     # Obtiene la probabilidad de churn de todos los elementos del cluster
-    random_forest = load('random_forest_churn.joblib')
+    random_forest = load(model_file)
     proba_matrix = getChurnProbabilities(random_forest, x)
 
     # Segmenta los elementos del cluster

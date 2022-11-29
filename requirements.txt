@@ -5,3 +5,4 @@ dask
 pandas
 numpy
 scikit-learn
+dask-ml

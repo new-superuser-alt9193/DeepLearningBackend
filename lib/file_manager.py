@@ -36,6 +36,8 @@ def json_to_csv(data, csv_file):
             csv_writer.writerow(row)
     data_file.close()
 
+    return str(data["rows"][0])
+
 # Utilidades para el servidor
 # -----------------------------------------------
 def get_server_dir(SERVER_FILE):
@@ -52,9 +54,9 @@ def write_server_file(SERVER_FILE, working_dir):
 
 # Utilidad para generar los perfiles de todos los cluster
 # -----------------------------------------------
-def set_churn_segment(x1, x2, x3, working_dir):
-
+def set_churn_segment(x1, x2, x3, working_dir, model_file):
     clusters_dir = working_dir + "/cluster/"
+    model_file = 'random_forest_churn.joblib'
     clusters = os.listdir(clusters_dir)
 
     for i in clusters:
@@ -67,14 +69,29 @@ def set_churn_segment(x1, x2, x3, working_dir):
 # Utilidad para manejar un nuevo projecto
 # -----------------------------------------------
 def new_dir(SERVER_FILE, name, data):
+    # Iniciacion
     working_dir = get_server_dir(SERVER_FILE) + "/uploads/" + name
     os.makedirs(working_dir, exist_ok=True)
     write_server_file(SERVER_FILE, working_dir)
 
+    # Subida del csv
     csv_file = working_dir + "/" + name + ".csv"
-    json_to_csv(data, csv_file)
+    csv_format = json_to_csv(data, csv_file)
     del data
     
+    model_file=""
+    # Comprobacion de un modelo existente
+    model_trainded = read_json_file("./model.json")
+    if csv_format in model_trainded:
+        print("a")
+    else:
+        # PCA
+        model.reduce_csv(csv_file)
+        # Traing model
+        
+    
+    # Calculo de churn con el modelo
+    # Creacion de clusters
     clusters = model.make_clusters(working_dir, name)
     # "churn_segment" : [porcentaje1, porcentaje2, porcentaje3],
     # sort growing / decreasing
@@ -84,7 +101,7 @@ def new_dir(SERVER_FILE, name, data):
         "sort" : "growing",
         "group" : clusters
     }
-
     write_json_file(working_dir + "/about.json", about)
 
-    set_churn_segment(20, 50, 70, working_dir)
+    # Creacion de perfiles
+    set_churn_segment(20, 50, 70, working_dir, model_file)
