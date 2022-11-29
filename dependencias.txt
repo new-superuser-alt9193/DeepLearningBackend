@@ -1,0 +1,7 @@
+flask
+flask_cors
+waitress
+dask
+pandas
+numpy
+sklearn
