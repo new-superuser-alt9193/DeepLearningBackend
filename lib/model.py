@@ -170,7 +170,6 @@ def create_model(csv_file, model_file, working_dir):
     cm = confusion_matrix(y_test, y_pred)
     cm_plot = ConfusionMatrixDisplay(cm).plot()
     plt.savefig(working_dir + "/confusion_matrix.png")
-    print("save")
 
     dump(random_forest, model_file)
 
@@ -183,7 +182,7 @@ def plotChurnProfileMean(cluster, churn_profile, churn_profile_df, columns_to_dr
     for i, value in enumerate(x):
         value = round(value,2)
         plt.annotate(value, (x[i], y[i]))
-    plt.savefig(cluster + churn_profile + "_profile_mean_data.png", bbox_inches = "tight")
+    plt.savefig(cluster + "/" + churn_profile + "_profile_mean_data.png", bbox_inches = "tight")
     
 # -----------------------------------------------
 def make_clusters(file_path, file_name):
@@ -279,7 +278,7 @@ def make_perfiles(cluster, cs1, cs2, cs3, model_file):
         # Obtencion de datos y graficacion de cada perfil
         if "BILL_AMOUNT" in names:
             churn_bill_value.append((df['BILL_AMOUNT'] * df['CHURN_PERCENTAGE']).sum())
-        plotChurnProfileMean(cluster, perfil[i], segment, ["CUSTOMER_ID", "Unnamed: 0"])
+        plotChurnProfileMean(cluster, perfil[i], df, ["CUSTOMER_ID", "Unnamed: 0"])
 
         # Guardado de perfil
         df.to_csv(cluster +  "/" + str(i) + ".csv")
@@ -287,12 +286,13 @@ def make_perfiles(cluster, cs1, cs2, cs3, model_file):
 
     # Graficacion de todos los perfiles
     if "BILL_AMOUNT" in names:
+        perfil = ["permanente","bajo","medio","alto"]
         plt.bar(perfil, churn_bill_value)
         plt.title('Valor monetario de cada perfil de churn')
         plt.ylabel('Bill amount')
         plt.xlabel('Perfil de churn')
         for i in range (0, len(perfil)):
-            plt.annotate("$" + str(round(y[i], 2)),(i,i), xytext = (0,10),textcoords="offset points", ha = "center")
+            plt.annotate("$" + str(round(churn_bill_value[i], 2)),(i,i), xytext = (0,10),textcoords="offset points", ha = "center")
         plt.savefig(cluster + "/churn_profile_bill_amount.png")
 
 def make_perfiles_info(cluster):

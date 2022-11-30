@@ -89,10 +89,14 @@ def get_matrix_image():
     filename = working_dir + '/confusion_matrix.png'
     return send_file(filename, mimetype='image/png')
 
-@app.route('/image/cluster/')
-def get_clusters_image():
+@app.route('/image/cluster/<string:name>/<string:perfil>')
+def get_clusters_image(name, perfil):
     working_dir = get_working_dir()
-    filename = working_dir + '/confusion_matrix.png'
+    filename = ""
+    if perfil == "all":
+        filename = working_dir + "/cluster/" + name + '/churn_profile_bill_amount.png'
+    else:
+        filename = working_dir + "/cluster/" + name + "/" +  perfil + "_profile_mean_data.png"
     return send_file(filename, mimetype='image/png')
 # ///////////////////////////////////////////////
 
