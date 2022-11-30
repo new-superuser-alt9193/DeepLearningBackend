@@ -9,10 +9,12 @@ from dask_ml.wrappers import ParallelPostFit
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.model_selection import KFold, cross_val_score, cross_val_predict
 from sklearn.preprocessing import StandardScaler
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from joblib import load, dump
@@ -166,8 +168,9 @@ def create_model(csv_file, model_file, working_dir):
     # Matriz de confusion
     y_pred = random_forest.predict(x_test)
     cm = confusion_matrix(y_test, y_pred)
-    cm_plot = ConfusionMatrixDisplay(cm)
+    cm_plot = ConfusionMatrixDisplay(cm).plot()
     plt.savefig(working_dir + "/confusion_matrix.png")
+    print("save")
 
     dump(random_forest, model_file)
 
