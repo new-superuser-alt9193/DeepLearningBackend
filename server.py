@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 from waitress import serve
 
@@ -82,6 +82,11 @@ def get_churn_segment():
     
     return jsonify({"churn_segment" : churn_segment})
 
+# ...............................................
+@app.route('/image/')
+def get_image():
+    filename = 'confusion_matrix.png'
+    return send_file(filename, mimetype='image/png')
 # ///////////////////////////////////////////////
 
 if __name__ == '__main__':
