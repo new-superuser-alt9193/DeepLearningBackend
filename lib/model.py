@@ -170,6 +170,7 @@ def create_model(csv_file, model_file, working_dir):
     cm = confusion_matrix(y_test, y_pred)
     cm_plot = ConfusionMatrixDisplay(cm).plot()
     plt.savefig(working_dir + "/confusion_matrix.png")
+    plt.close()
 
     dump(random_forest, model_file)
 
@@ -186,7 +187,7 @@ def plotChurnProfileMean(cluster, churn_profile, churn_profile_df, columns_to_dr
         value = round(value,2)
         plt.annotate(value, (x[i], y[i]))
     plt.savefig(cluster + "/" + churn_profile + "_profile_mean_data.png", bbox_inches = "tight")
-    plt.clf()
+    plt.close()
     
 # -----------------------------------------------
 def make_clusters(file_path, file_name):
