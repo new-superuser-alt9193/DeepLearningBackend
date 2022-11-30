@@ -39,6 +39,9 @@ def json_to_csv(data, csv_file):
 
     return str(data["rows"][0])
 
+def check_file(file):
+    return os.path.exists(file)
+    
 def name_model():
     new_model = hex(len(os.listdir("./models")) + 1)
     return new_model

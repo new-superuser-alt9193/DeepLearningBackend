@@ -176,13 +176,17 @@ def create_model(csv_file, model_file, working_dir):
 def plotChurnProfileMean(cluster, churn_profile, churn_profile_df, columns_to_drop):
     churn_profile_df = churn_profile_df.drop(columns = columns_to_drop, errors='ignore')
     names = churn_profile_df.columns
-    x = churn_profile_df.mean()
+    if churn_profile_df.shape[0] > 0:
+        x = churn_profile_df.mean()
+    else:
+        x = [0] * len(names)
     y = names
     plt.plot(x, y, marker = 'o')
     for i, value in enumerate(x):
         value = round(value,2)
         plt.annotate(value, (x[i], y[i]))
     plt.savefig(cluster + "/" + churn_profile + "_profile_mean_data.png", bbox_inches = "tight")
+    plt.clf()
     
 # -----------------------------------------------
 def make_clusters(file_path, file_name):
@@ -294,6 +298,7 @@ def make_perfiles(cluster, cs1, cs2, cs3, model_file):
         for i in range (0, len(perfil)):
             plt.annotate("$" + str(round(churn_bill_value[i], 2)),(i,i), xytext = (0,10),textcoords="offset points", ha = "center")
         plt.savefig(cluster + "/churn_profile_bill_amount.png")
+        plt.close()
 
 def make_perfiles_info(cluster):
     info = [{}, {}, {}, {}]

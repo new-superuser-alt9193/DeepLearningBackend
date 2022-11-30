@@ -12,6 +12,9 @@ SERVER_FILE = __file__
 def code_200(): 
     return jsonify(success=True)
 
+def code_404(): 
+    return jsonify(success=False)
+
 def update_server():
     server_file = fm.get_server_dir(SERVER_FILE) + "/server.json"
     server = fm.read_json_file(server_file)    
@@ -87,7 +90,10 @@ def get_churn_segment():
 def get_matrix_image():
     working_dir = get_working_dir()
     filename = working_dir + '/confusion_matrix.png'
-    return send_file(filename, mimetype='image/png')
+    if fm.check_file(filename):
+        return send_file(filename, mimetype='image/png')
+    else:
+        return code_404()
 
 @app.route('/image/cluster/<string:name>/<string:perfil>')
 def get_clusters_image(name, perfil):
