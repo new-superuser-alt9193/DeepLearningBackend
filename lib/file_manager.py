@@ -1,6 +1,7 @@
 import os
 import json
 import csv
+import zlib
 
 from . import model
 
@@ -38,6 +39,10 @@ def json_to_csv(data, csv_file):
 
     return str(data["rows"][0])
 
+def name_model():
+    new_model = hex(len(os.listdir("./models")) + 1)
+    return new_model
+
 # Utilidades para el servidor
 # -----------------------------------------------
 def get_server_dir(SERVER_FILE):
@@ -56,11 +61,10 @@ def write_server_file(SERVER_FILE, working_dir):
 # -----------------------------------------------
 def set_churn_segment(x1, x2, x3, working_dir, model_file):
     clusters_dir = working_dir + "/cluster/"
-    model_file = 'random_forest_churn.joblib'
     clusters = os.listdir(clusters_dir)
 
     for i in clusters:
-        model.make_perfiles(clusters_dir + i, x1, x2, x3)
+        model.make_perfiles(clusters_dir + i, x1, x2, x3, model_file)
     
     for i in clusters:
         cluster = clusters_dir + i
@@ -83,11 +87,16 @@ def new_dir(SERVER_FILE, name, data):
     # Comprobacion de un modelo existente
     model_trainded = read_json_file("./model.json")
     if csv_format in model_trainded:
-        print("a")
+        model_file = model_trainded[csv_format]
     else:
+        model_file = "./models/" + name_model() +".joblib"
         # PCA
-        model.reduce_csv(csv_file)
+        pca_columns = model.reduce_csv(csv_file)
+        print(pca_columns)
         # Traing model
+        model.create_model(csv_file, model_file)
+        model_trainded[csv_format] = model_file
+        # write_json_file("./model.json", model_trainded)
         
     
     # Calculo de churn con el modelo
@@ -97,6 +106,7 @@ def new_dir(SERVER_FILE, name, data):
     # sort growing / decreasing
     # "group" : [{"name" : "uno",  "percentage": 20}]
     about = {
+        "model_file" : model_file,
         "churn_segment" : [.20, .50, .70],
         "sort" : "growing",
         "group" : clusters

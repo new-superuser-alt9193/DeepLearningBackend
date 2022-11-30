@@ -1,23 +1,22 @@
 import dask.dataframe as dd
 import pandas as pd
-
 import numpy as np
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
+from dask_ml import preprocessing
+from dask_ml.model_selection import train_test_split
+from dask_ml.wrappers import ParallelPostFit
+
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import KFold, cross_val_score, cross_val_predict
+from sklearn.preprocessing import StandardScaler
+
+from joblib import load, dump
 
 from scipy.spatial.distance import cdist
-
-from joblib import load
-
 import random
-
-import pandas as pd
-import dask.dataframe as dd
-from dask_ml import preprocessing
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 
 target = ["TARGET", "Target", "target", "CHURN", "Churn", "churn", "RESULT", "Result", "result"]
 # ///////////////////////////////////////////////
@@ -53,7 +52,7 @@ def getK(x):
         i += 1
     return i - 2
 
-def makeClusters(n):
+def makeClusters(n, x):
     km = KMeans(
         n_clusters= n, init='random',
         n_init=10, max_iter=300, 
@@ -133,16 +132,34 @@ def reduce_csv(csv_file):
 
     reduced = []
     for i in range(0, len(pca.explained_variance_ratio_)):
-        print(i)
         reduced.append(columns[i])   
 
     result[reduced] = df[reduced]
 
     result.to_csv(csv_file, index=False, single_file=True)
+    return str(list(result.columns))
+
+def create_model(csv_file, model_file):
+    df = dd.read_csv(csv_file)
+    y = df[df.columns.intersection(target)]
+    # y = y.to_dask_array(lengths=True)
+    x = df.drop(columns= target + ["Unnamed: 0"], errors='ignore')
+    # x = dd.from_array(scaler(df)).to_dask_array(lengths=True)
+
+    x_train, x_test, y_train, y_test = train_test_split(x,y, test_size= 0.25, random_state= 1)
+
+    random_forest = RandomForestClassifier(max_depth = 3, random_state = 1)
+
+    # kfold = KFold(n_splits = 5, random_state=42, shuffle=True)
+    # cv_results = cross_val_score(random_forest, x,y, cv = kfold, scoring='accuracy', verbose = 0)
+    
+    random_forest = random_forest.fit(x_train, y_train)
+
+    dump(random_forest, model_file)
 
 # -----------------------------------------------
 def make_clusters(file_path, file_name):
-    if True:
+    if False:
         df = dd.read_csv(file_path + "/" + file_name + ".csv")
 
         cluster = []
@@ -153,11 +170,10 @@ def make_clusters(file_path, file_name):
             df.to_csv(i + "/cluster.csv", index=False, single_file=True)
         return [{"name": "cluster_1", "percentage": 25}, {"name": "cluster_2", "percentage": 25}, {"name": "cluster_3", "percentage": 25}, {"name": "cluster_4", "percentage": 25}]
     else:
-        df = dd.read_csv(file_path + "/" + file_name + ".csv")
+        df = pd.read_csv(file_path + "/" + file_name + ".csv")
         df = df.drop(columns=["Unnamed: 0"], errors='ignore')
 
         x = np.array(df.drop(columns=target, errors='ignore'))
-
         distortions = []
         inertias = []
         mapping1 = {}
@@ -178,7 +194,7 @@ def make_clusters(file_path, file_name):
 
 
         n = getK(x)
-        km, y_km, km_labels = makeClusters(n)
+        km, y_km, km_labels = makeClusters(n, x)
 
         clusters = pd.DataFrame(data = {'cluster': y_km})
 
@@ -189,14 +205,15 @@ def make_clusters(file_path, file_name):
 
         # sort the dataframe
         df_clusters = df_clusters.sort_values(by=['cluster'])
-
         info = []
         amount = 0
         for i in range (n):
             df_to_csv = df_clusters[df_clusters['cluster'] == i]
-            clusters_amount = df_to_csv.shape[0].compute()
+            df_to_csv = df_to_csv.drop(columns=['cluster'])
+            clusters_amount = df_to_csv.shape[0]
             amount += clusters_amount 
             info.append({"name": "cluster_" + str(i + 1), "percentage": clusters_amount})
+            df_to_csv = dd.from_pandas(df_to_csv,  npartitions=1)
             df_to_csv.to_csv(file_path + "/cluster/cluster_" + str(i) + "/cluster.csv", single_file=True)
         for i in info:
             i["percentage"] = i["percentage"] / amount
@@ -207,16 +224,15 @@ def make_clusters(file_path, file_name):
 # cs1, cs2, cs3: rangos de churn segment
 def make_perfiles(cluster, cs1, cs2, cs3, model_file):
     # Lee el cluster
-    df = pd.read_csv(cluster + "/cluster.csv")
+    df = dd.read_csv(cluster + "/cluster.csv")
     x = df.drop(columns= target + ['Unnamed: 0'], errors='ignore')
-
     # Obtiene la probabilidad de churn de todos los elementos del cluster
     random_forest = load(model_file)
     proba_matrix = getChurnProbabilities(random_forest, x)
 
     # Segmenta los elementos del cluster
     segments = []
-    segments = showProbabilities(cs1, cs2, cs3, proba_matrix, x)
+    segments = showProbabilities(cs1, cs2, cs3, proba_matrix, x.compute())
 
     names = x.columns.to_list()
     names[0] = "CUSTOMER_ID"
@@ -232,19 +248,40 @@ def make_perfiles_info(cluster):
     info = [{}, {}, {}, {}]
     for i in range(4):
         df = dd.read_csv(cluster + "/" + str(i) + ".csv")
+        df_colums = list(df.columns)
 
         AMOUNT = df.shape[0].compute()
-        BILL_AMOUNT = float(df['BILL_AMOUNT'].sum().compute())
-        PREPAID_LINES = float(df['PREPAID_LINES'].sum().compute())
-        POSTPAID_LINES = float(df['POSTPAID_LINES'].sum().compute())
-        OTHER_LINES = float(df['OTHER_LINES'].sum().compute())
-        PARTY_REV = float(df['PARTY_REV'].sum().compute())
+        
+        if "BILL_AMOUNT" in df_colums:
+            bill_amount = float(df['BILL_AMOUNT'].sum().compute())
+        else:
+            bill_amount = "-1"
+
+        if "PREPAID_LINES" in df_colums:
+            prepaid_lines = float(df['PREPAID_LINES'].sum().compute())
+        else:
+            prepaid_lines = "-1"
+        
+        if "POSTPAID_LINES" in df_colums:
+            postpaid_lines = float(df['POSTPAID_LINES'].sum().compute())
+        else:
+            postpaid_lines = "-1"
+        
+        if "OTHER_LINES" in df_colums:
+            other_lines = float(df['OTHER_LINES'].sum().compute())
+        else:
+            other_lines = "-1"
+        
+        if "PARTY_REV" in df_colums:
+            party_rev = float(df['PARTY_REV'].sum().compute())
+        else:
+            PARTY_REV = "-1"
 
         info[i] = {
             "amount" : AMOUNT,
-            "bill amount" : BILL_AMOUNT,
-            "lines" : [{"type" : "PREPAID_LINES", "amount" : PREPAID_LINES},{"type" : "POSTPAID_LINES", "amount" : POSTPAID_LINES}, {"type" : "OTHER_LINES", "amount" : OTHER_LINES}],
-            "revenues" : PARTY_REV
+            "bill amount" : bill_amount,
+            "lines" : [{"type" : "PREPAID_LINES", "amount" : prepaid_lines},{"type" : "POSTPAID_LINES", "amount" : postpaid_lines}, {"type" : "OTHER_LINES", "amount" : other_lines}],
+            "revenues" : party_rev
         }
 
     return info
