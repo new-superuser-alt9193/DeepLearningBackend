@@ -2,3 +2,4 @@ uploads/
 *csv
 *.json
 __pycache__
+models

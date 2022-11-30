@@ -94,11 +94,14 @@ def new_dir(SERVER_FILE, name, data):
             model.format_csv(csv_file, pca_columns)
             model_file = model_trainded["model"][pca_columns]
         else:
-            model_file = "./models/" + name_model() +".joblib"
             # PCA
             pca_columns = model.reduce_csv(csv_file)
             model_trainded["format"][csv_format] = pca_columns
+
             # Traing model
+            if not os.path.exists("./models"):
+                os.mkdir("./models")
+            model_file = "./models/" + name_model() +".joblib"
             model.create_model(csv_file, model_file)
             model_trainded["model"][pca_columns] = model_file
             write_json_file("./model.json", model_trainded)
