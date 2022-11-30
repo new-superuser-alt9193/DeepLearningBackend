@@ -106,7 +106,7 @@ def getCategoricalColumns(df):
 # Convierte las variables categoricas en numericas en base a label encoding
 def getNumericDataset(df):
     categoricalColumns = getCategoricalColumns(df)
-    numDataset = df.drop(columns= categoricalColumns)
+    numDataset = df.drop(columns= categoricalColumns, errors='ignore')
     categoricalDataset = df[categoricalColumns]
 
     le = preprocessing.LabelEncoder()
@@ -174,6 +174,17 @@ def create_model(csv_file, model_file, working_dir):
 
     dump(random_forest, model_file)
 
+def plotChurnProfileMean(cluster, churn_profile, churn_profile_df, columns_to_drop):
+    churn_profile_df = churn_profile_df.drop(columns = columns_to_drop, errors='ignore')
+    names = churn_profile_df.columns
+    x = churn_profile_df.mean()
+    y = names
+    plt.plot(x, y, marker = 'o')
+    for i, value in enumerate(x):
+        value = round(value,2)
+        plt.annotate(value, (x[i], y[i]))
+    plt.savefig(cluster + churn_profile + "_profile_mean_data.png", bbox_inches = "tight")
+    
 # -----------------------------------------------
 def make_clusters(file_path, file_name):
     if False:
@@ -226,10 +237,14 @@ def make_clusters(file_path, file_name):
         amount = 0
         for i in range (n):
             df_to_csv = df_clusters[df_clusters['cluster'] == i]
-            df_to_csv = df_to_csv.drop(columns=['cluster'])
+            df_to_csv = df_to_csv.drop(columns=['cluster'], errors='ignore')
+
+            # Porpocion de los perfiles
             clusters_amount = df_to_csv.shape[0]
             amount += clusters_amount 
             info.append({"name": "cluster_" + str(i + 1), "percentage": clusters_amount})
+            
+            # Guardado de los perfiles
             df_to_csv = dd.from_pandas(df_to_csv,  npartitions=1)
             df_to_csv.to_csv(file_path + "/cluster/cluster_" + str(i) + "/cluster.csv", single_file=True)
         for i in info:
@@ -249,6 +264,8 @@ def make_perfiles(cluster, cs1, cs2, cs3, model_file):
 
     # Segmenta los elementos del cluster
     segments = []
+    perfil = ["permanent", "low", "mid", "high"]
+    churn_bill_value = []
     segments = showProbabilities(cs1, cs2, cs3, proba_matrix, x.compute())
 
     names = x.columns.to_list()
@@ -258,8 +275,25 @@ def make_perfiles(cluster, cs1, cs2, cs3, model_file):
     i = 0
     for segment in segments:
         df = pd.DataFrame(segment, columns = names)
+
+        # Obtencion de datos y graficacion de cada perfil
+        if "BILL_AMOUNT" in names:
+            churn_bill_value.append((df['BILL_AMOUNT'] * df['CHURN_PERCENTAGE']).sum())
+        plotChurnProfileMean(cluster, perfil[i], segment, ["CUSTOMER_ID", "Unnamed: 0"])
+
+        # Guardado de perfil
         df.to_csv(cluster +  "/" + str(i) + ".csv")
         i += 1
+
+    # Graficacion de todos los perfiles
+    if "BILL_AMOUNT" in names:
+        plt.bar(perfil, churn_bill_value)
+        plt.title('Valor monetario de cada perfil de churn')
+        plt.ylabel('Bill amount')
+        plt.xlabel('Perfil de churn')
+        for i in range (0, len(perfil)):
+            plt.annotate("$" + str(round(y[i], 2)),(i,i), xytext = (0,10),textcoords="offset points", ha = "center")
+        plt.savefig(cluster + "/churn_profile_bill_amount.png")
 
 def make_perfiles_info(cluster):
     info = [{}, {}, {}, {}]
