@@ -139,6 +139,12 @@ def reduce_csv(csv_file):
     result.to_csv(csv_file, index=False, single_file=True)
     return str(list(result.columns))
 
+def format_csv(csv_file, pca_columns):
+    pca_columns = pca_columns.replace('\'', '').replace("[", "").replace("]", "").replace(",", "").split(" ")
+    df = dd.read_csv(csv_file)
+    df = df[pca_columns]
+    df.to_csv(csv_file, index=False, single_file=True)
+
 def create_model(csv_file, model_file):
     df = dd.read_csv(csv_file)
     y = df[df.columns.intersection(target)]

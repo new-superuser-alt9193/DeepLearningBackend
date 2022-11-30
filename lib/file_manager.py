@@ -86,17 +86,22 @@ def new_dir(SERVER_FILE, name, data):
     model_file=""
     # Comprobacion de un modelo existente
     model_trainded = read_json_file("./model.json")
-    if csv_format in model_trainded:
-        model_file = model_trainded[csv_format]
+    if csv_format in model_trainded["model"]:
+        model_file = model_trainded["model"][csv_format]
     else:
-        model_file = "./models/" + name_model() +".joblib"
-        # PCA
-        pca_columns = model.reduce_csv(csv_file)
-        print(pca_columns)
-        # Traing model
-        model.create_model(csv_file, model_file)
-        model_trainded[csv_format] = model_file
-        # write_json_file("./model.json", model_trainded)
+        if csv_format in model_trainded["format"]:
+            pca_columns = model_trainded["format"][csv_format]
+            model.format_csv(csv_file, pca_columns)
+            model_file = model_trainded["model"][pca_columns]
+        else:
+            model_file = "./models/" + name_model() +".joblib"
+            # PCA
+            pca_columns = model.reduce_csv(csv_file)
+            model_trainded["format"][csv_format] = pca_columns
+            # Traing model
+            model.create_model(csv_file, model_file)
+            model_trainded["model"][pca_columns] = model_file
+            write_json_file("./model.json", model_trainded)
         
     
     # Calculo de churn con el modelo
