@@ -13,6 +13,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold, cross_val_score, cross_val_predict
 from sklearn.preprocessing import StandardScaler
 
+import matplotlib.pyplot as plt
+
 from joblib import load, dump
 
 from scipy.spatial.distance import cdist
@@ -145,7 +147,7 @@ def format_csv(csv_file, pca_columns):
     df = df[pca_columns]
     df.to_csv(csv_file, index=False, single_file=True)
 
-def create_model(csv_file, model_file):
+def create_model(csv_file, model_file, working_dir):
     df = dd.read_csv(csv_file)
     y = df[df.columns.intersection(target)]
     # y = y.to_dask_array(lengths=True)
@@ -160,6 +162,12 @@ def create_model(csv_file, model_file):
     # cv_results = cross_val_score(random_forest, x,y, cv = kfold, scoring='accuracy', verbose = 0)
     
     random_forest = random_forest.fit(x_train, y_train)
+
+    # Matriz de confusion
+    y_pred = random_forest.predict(x_test)
+    cm = confusion_matrix(y_test, y_pred)
+    cm_plot = ConfusionMatrixDisplay(cm)
+    plt.savefig(working_dir + "/confusion_matrix.png")
 
     dump(random_forest, model_file)
 

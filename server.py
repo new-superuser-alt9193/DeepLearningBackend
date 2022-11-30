@@ -83,9 +83,13 @@ def get_churn_segment():
     return jsonify({"churn_segment" : churn_segment})
 
 # ...............................................
-@app.route('/image/')
-def get_image():
-    filename = 'confusion_matrix.png'
+@app.route('/image/<string:type>/<string:about>')
+def get_image(type, about):
+    working_dir = get_working_dir()
+    if type == "matrix":
+        filename = working_dir + '/confusion_matrix.png'
+    else:
+        filename = 'confusion_matrix.png'
     return send_file(filename, mimetype='image/png')
 # ///////////////////////////////////////////////
 

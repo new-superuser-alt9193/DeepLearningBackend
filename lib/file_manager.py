@@ -102,7 +102,7 @@ def new_dir(SERVER_FILE, name, data):
             if not os.path.exists("./models"):
                 os.mkdir("./models")
             model_file = "./models/" + name_model() +".joblib"
-            model.create_model(csv_file, model_file)
+            model.create_model(csv_file, model_file, working_dir)
             model_trainded["model"][pca_columns] = model_file
             write_json_file("./model.json", model_trainded)
         
