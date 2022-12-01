@@ -242,22 +242,35 @@ def make_clusters(file_path, file_name):
 
         # sort the dataframe
         df_clusters = df_clusters.sort_values(by=['cluster'])
+
+        #Graficacion de los cluster
+        clusters_plot = df_clusters.drop(columns=columns_to_drop).groupby(by=['cluster']).mean().reset_index()
+        clusters_plot = min_max_scaler(clusters_plot)
+        plot_columns = df_to_csv.columns
+        cluster_plot = pd.DataFrame(data=cluster_plot, columns=plot_columns)
+        fig = make_subplots(rows=n, cols=1, specs = list([[{"type" : "polar"}]] * n), 
+        )
+        for i in range (0,n):
+            cluster_color = '#' + str(random.randint(100000,999999)) #random color
+            #plot cluster
+            fig.append_trace(
+                go.Scatterpolar(
+                    r = clusters_plot.loc[i].values,
+                    theta = clusters_plot.columns,
+                    fill = 'toself',
+                    name = 'Cluster ' + str(i),
+                    fillcolor = cluster_color, line = dict(color = cluster_color),
+                    showlegend = True, opacity = 0.6
+                ), row = i + 1, col = 1
+            )
+        fig.update_layout(height=2000, showlegend=True)
+        fig.write_image(file_path + "/clusters_polar.png")
+
         info = []
         amount = 0
         for i in range (n):
             df_to_csv = df_clusters[df_clusters['cluster'] == i]
             df_to_csv = df_to_csv.drop(columns=['cluster'], errors='ignore')
-
-            #Graficacion de los cluster
-            plot_columns = df_to_csv.columns
-            cluster_plot = df_to_csv.mean().reset_index()
-            fig = go.Figure()
-            fig.add_trace(go.Scatterpolar(
-                r = cluster_plot.values,
-                theta = plot_columns,
-                fill = 'toself',
-                showlegend = True, opacity = 0.6
-            ))
 
             # Porpocion de los clusters
             clusters_amount = df_to_csv.shape[0]
@@ -267,7 +280,6 @@ def make_clusters(file_path, file_name):
             # Guardado de los clusters
             df_to_csv = dd.from_pandas(df_to_csv,  npartitions=1)
             df_to_csv.to_csv(file_path + "/cluster/cluster_" + str(i) + "/cluster.csv", single_file=True)
-            fig.write_image(file_path + "/cluster/cluster_" + str(i) + "/cluster.png")
         for i in info:
             i["percentage"] = i["percentage"] / amount
         

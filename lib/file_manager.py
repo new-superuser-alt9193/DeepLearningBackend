@@ -2,7 +2,7 @@ import os
 import json
 import csv
 import zlib
-
+import shutil
 from . import model
 
 # Utilidades para manejar los jsons
@@ -35,7 +35,6 @@ def json_to_csv(data, csv_file):
     for row in data["rows"][1:]:
         if row != [""]:
             csv_writer.writerow(row)
-            print(row)
     data_file.close()
 
     return str(data["rows"][0])
@@ -79,6 +78,8 @@ def set_churn_segment(x1, x2, x3, working_dir, model_file):
 def new_dir(SERVER_FILE, name, data):
     # Iniciacion
     working_dir = get_server_dir(SERVER_FILE) + "/uploads/" + name
+    if check_file(working_dir):
+        shutil.rmtree(working_dir)
     os.makedirs(working_dir, exist_ok=True)
     write_server_file(SERVER_FILE, working_dir)
 

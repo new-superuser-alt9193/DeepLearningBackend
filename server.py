@@ -102,10 +102,14 @@ def get_clusters_image(name, perfil):
     filename = ""
     if perfil == "all":
         filename = working_dir + "/cluster/" + name + '/churn_profile_bill_amount.png'
-    elif perfil == "polar":
-        filename = working_dir + "/cluster/" + name + '/cluster.png'
     else:
         filename = working_dir + "/cluster/" + name + "/" +  perfil + "_profile_mean_data.png"
+    return send_file(filename, mimetype='image/png')
+
+@app.route('/image/cluster/olar/')
+def get_clusters_image_polar(name, perfil):
+    working_dir = get_working_dir()
+    filename = working_dir + "/clusters_polar.png"
     return send_file(filename, mimetype='image/png')
 # ///////////////////////////////////////////////
 
