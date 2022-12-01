@@ -23,6 +23,7 @@ from joblib import load, dump
 
 from scipy.spatial.distance import cdist
 import random
+from collections import OrderedDict
 
 target = ["TARGET", "Target", "target", "CHURN", "Churn", "churn", "RESULT", "Result", "result"]
 # ///////////////////////////////////////////////
@@ -137,12 +138,23 @@ def reduce_csv(csv_file):
     columns = list(x.columns)
     x = scaler(x)
     
-    pca = PCA(n_components=.8, svd_solver='full')
+    pca = PCA()
     pca.fit(x)
 
+    to_reduce = {}
+    for i in range(len(columns)):
+        to_reduce[pca.explained_variance_ratio_[i]] = columns[i]
+    to_reduce = OrderedDict(sorted(to_reduce.items(), reverse=True))
+    print(to_reduce)
     reduced = []
-    for i in range(0, len(pca.explained_variance_ratio_)):
-        reduced.append(columns[i])   
+    explain_ratio = 0
+    for i in to_reduce:
+        if explain_ratio < .8:
+            reduced.append(to_reduce[i])
+            explain_ratio += i
+            print(to_reduce[i], i)
+        else:
+            break   
 
     result[reduced] = df[reduced]
 
