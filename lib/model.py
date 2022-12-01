@@ -306,13 +306,14 @@ def make_perfiles(cluster, cs1, cs2, cs3, model_file):
     names[0] = "CUSTOMER_ID"
     names.append('CHURN_PERCENTAGE')
     
+    bill_amount = list(set(["BILL_AMOUNT", "Bill_amount", "bill_amount"]).intersection(names))
     i = 0
     for segment in segments:
         df = pd.DataFrame(segment, columns = names)
 
         # Obtencion de datos y graficacion de cada perfil
-        if "BILL_AMOUNT" in names:
-            churn_bill_value.append((df['BILL_AMOUNT'] * df['CHURN_PERCENTAGE']).sum())
+        if len(bill_amount) > 0:
+            churn_bill_value.append((df[bill_amount[0]] * df['CHURN_PERCENTAGE']).sum())
         plotChurnProfileMean(cluster, perfil[i], df, ["CUSTOMER_ID", "Unnamed: 0"])
 
         # Guardado de perfil
@@ -320,7 +321,7 @@ def make_perfiles(cluster, cs1, cs2, cs3, model_file):
         i += 1
 
     # Graficacion de todos los perfiles
-    if "BILL_AMOUNT" in names:
+    if len(bill_amount) > 0:
         perfil = ["permanente","bajo","medio","alto"]
         plt.bar(perfil, churn_bill_value)
         plt.title('Valor monetario de cada perfil de churn')

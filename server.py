@@ -104,13 +104,21 @@ def get_clusters_image(name, perfil):
         filename = working_dir + "/cluster/" + name + '/churn_profile_bill_amount.png'
     else:
         filename = working_dir + "/cluster/" + name + "/" +  perfil + "_profile_mean_data.png"
-    return send_file(filename, mimetype='image/png')
+    
+    if fm.check_file(filename):
+        return send_file(filename, mimetype='image/png')
+    else:
+        return code_404()
 
 @app.route('/image/cluster/polar/')
 def get_clusters_image_polar():
     working_dir = get_working_dir()
     filename = working_dir + "/clusters_polar.png"
-    return send_file(filename, mimetype='image/png')
+    
+    if fm.check_file(filename):
+        return send_file(filename, mimetype='image/png')
+    else:
+        return code_404()
 # ///////////////////////////////////////////////
 
 if __name__ == '__main__':
