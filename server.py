@@ -44,6 +44,7 @@ def hello_world():
 @app.route('/upload/<string:name>', methods=['POST'])
 def upload(name):
     json_data = request.get_json()
+    print("Archivo recibido")
     fm.new_dir(SERVER_FILE, name, json_data)
     return code_200()
 

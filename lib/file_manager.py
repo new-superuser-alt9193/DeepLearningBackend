@@ -35,6 +35,7 @@ def json_to_csv(data, csv_file):
     for row in data["rows"][1:]:
         if row != [""]:
             csv_writer.writerow(row)
+            print(row)
     data_file.close()
 
     return str(data["rows"][0])
@@ -85,7 +86,8 @@ def new_dir(SERVER_FILE, name, data):
     csv_file = working_dir + "/" + name + ".csv"
     csv_format = json_to_csv(data, csv_file)
     del data
-    
+    print("Csv guardado")
+
     model_file=""
     # Comprobacion de un modelo existente
     model_trainded = read_json_file("./model.json")
@@ -100,7 +102,7 @@ def new_dir(SERVER_FILE, name, data):
             # PCA
             pca_columns = model.reduce_csv(csv_file)
             model_trainded["format"][csv_format] = pca_columns
-
+            print("PCA finalizado")
             # Traing model
             if not os.path.exists("./models"):
                 os.mkdir("./models")
@@ -108,7 +110,7 @@ def new_dir(SERVER_FILE, name, data):
             model.create_model(csv_file, model_file, working_dir)
             model_trainded["model"][pca_columns] = model_file
             write_json_file("./model.json", model_trainded)
-        
+            print("Modelo entrenado")
     
     # Calculo de churn con el modelo
     # Creacion de clusters

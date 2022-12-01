@@ -6,3 +6,5 @@ pandas
 numpy
 scikit-learn
 dask-ml
+plotly==5.11.0
+kaleido
