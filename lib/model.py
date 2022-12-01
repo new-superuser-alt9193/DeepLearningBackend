@@ -11,11 +11,12 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.model_selection import KFold, cross_val_score, cross_val_predict
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 from joblib import load, dump
 
@@ -122,6 +123,10 @@ def scaler(df):
     scaler = StandardScaler()
     return scaler.fit_transform(df)
 
+def min_max_scaler(df):
+    scaler = MinMaxScaler()
+    return scaler.fit_transform(df)
+
 def reduce_csv(csv_file):
     df = dd.read_csv(csv_file)
     result = df[df.columns.intersection(target)]
@@ -188,7 +193,7 @@ def plotChurnProfileMean(cluster, churn_profile, churn_profile_df, columns_to_dr
         plt.annotate(value, (x[i], y[i]))
     plt.savefig(cluster + "/" + churn_profile + "_profile_mean_data.png", bbox_inches = "tight")
     plt.close()
-    
+
 # -----------------------------------------------
 def make_clusters(file_path, file_name):
     if False:
@@ -243,14 +248,26 @@ def make_clusters(file_path, file_name):
             df_to_csv = df_clusters[df_clusters['cluster'] == i]
             df_to_csv = df_to_csv.drop(columns=['cluster'], errors='ignore')
 
-            # Porpocion de los perfiles
+            #Graficacion de los cluster
+            plot_columns = df_to_csv.columns
+            cluster_plot = df_to_csv.mean().reset_index()
+            fig = go.Figure()
+            fig.add_trace(go.Scatterpolar(
+                r = cluster_plot.values,
+                theta = plot_columns,
+                fill = 'toself',
+                showlegend = True, opacity = 0.6
+            ))
+
+            # Porpocion de los clusters
             clusters_amount = df_to_csv.shape[0]
             amount += clusters_amount 
             info.append({"name": "cluster_" + str(i + 1), "percentage": clusters_amount})
             
-            # Guardado de los perfiles
+            # Guardado de los clusters
             df_to_csv = dd.from_pandas(df_to_csv,  npartitions=1)
             df_to_csv.to_csv(file_path + "/cluster/cluster_" + str(i) + "/cluster.csv", single_file=True)
+            fig.write_image(file_path + "/cluster/cluster_" + str(i) + "/cluster.png")
         for i in info:
             i["percentage"] = i["percentage"] / amount
         
