@@ -17,6 +17,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from joblib import load, dump
 
@@ -244,10 +245,10 @@ def make_clusters(file_path, file_name):
         df_clusters = df_clusters.sort_values(by=['cluster'])
 
         #Graficacion de los cluster
-        clusters_plot = df_clusters.drop(columns=columns_to_drop).groupby(by=['cluster']).mean().reset_index()
+        clusters_plot = df_clusters.drop(columns=['Unnamed: 0'], errors='ignore').groupby(by=['cluster']).mean().reset_index()
         clusters_plot = min_max_scaler(clusters_plot)
-        plot_columns = df_to_csv.columns
-        cluster_plot = pd.DataFrame(data=cluster_plot, columns=plot_columns)
+        plot_columns = df_clusters.columns
+        clusters_plot = pd.DataFrame(data=clusters_plot, columns=plot_columns)
         fig = make_subplots(rows=n, cols=1, specs = list([[{"type" : "polar"}]] * n), 
         )
         for i in range (0,n):

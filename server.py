@@ -74,8 +74,8 @@ def set_churn_segment(x1, x2, x3):
     x1 = float(x1)/100
     x2 = float(x2)/100
     x3 = float(x3)/100
-
-    fm.set_churn_segment(x1, x2, x3, get_working_dir())
+    model_file = fm.read_json_file(get_about())["model_file"]
+    fm.set_churn_segment(x1, x2, x3, get_working_dir(), model_file)
     fm.rewrite_json_file(get_about(), "churn_segment", [x1, x2, x3])
     return code_200()
 
@@ -106,8 +106,8 @@ def get_clusters_image(name, perfil):
         filename = working_dir + "/cluster/" + name + "/" +  perfil + "_profile_mean_data.png"
     return send_file(filename, mimetype='image/png')
 
-@app.route('/image/cluster/olar/')
-def get_clusters_image_polar(name, perfil):
+@app.route('/image/cluster/polar/')
+def get_clusters_image_polar():
     working_dir = get_working_dir()
     filename = working_dir + "/clusters_polar.png"
     return send_file(filename, mimetype='image/png')
