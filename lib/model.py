@@ -79,14 +79,19 @@ def showProbabilities(low,mid,high, proba_matrix, x):
     clients_mid = []
     clients_high = []
     i = 0
+    print(x.loc[0])
     
     #for each client in the data set
     for client in proba_matrix:
         #get all their data and their churn chance into one list
         client_index = x.index[i]
         client_info = x.loc[client_index].values
+        if i <1:
+            print(client_info)
         client_info = np.append(client_info,client[1])
         #store client data into profiles(permanent, low, mid, high) list
+        if i <1:
+            print(client_info)
         if client[1] < low:
             clients_permanent.append(client_info)
         elif client[1] < mid:
@@ -138,6 +143,7 @@ def reduce_csv(csv_file):
 
     x = getNumericDataset(df)
     columns = list(x.columns)
+    df = x
     x = scaler(x)
     
     pca = PCA()
@@ -157,7 +163,7 @@ def reduce_csv(csv_file):
         else:
             break   
 
-    result[reduced] = x[reduced]
+    result[reduced] = df[reduced]
 
     result.to_csv(csv_file, index=False, single_file=True)
     return str(list(result.columns))
@@ -315,15 +321,17 @@ def make_perfiles(cluster, cs1, cs2, cs3, model_file):
     segments = []
     perfil = ["permanent", "low", "mid", "high"]
     churn_bill_value = []
-    segments = showProbabilities(cs1, cs2, cs3, proba_matrix, x.compute())
+    segments = showProbabilities(cs1, cs2, cs3, proba_matrix, x.compute().reset_index(drop=True))
 
     names = x.columns.to_list()
-    names[0] = "CUSTOMER_ID"
+    # names[0] = "CUSTOMER_ID"
     names.append('CHURN_PERCENTAGE')
     
     bill_amount = list(set(["BILL_AMOUNT", "Bill_amount", "bill_amount"]).intersection(names))
     i = 0
     for segment in segments:
+        if len(segment) > 0:
+            print(segment[0])
         df = pd.DataFrame(segment, columns = names)
 
         # Obtencion de datos y graficacion de cada perfil

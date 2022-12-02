@@ -76,14 +76,13 @@ def set_churn_segment(x1, x2, x3, working_dir, model_file):
 # Utilidad para manejar un nuevo projecto
 # -----------------------------------------------
 def new_dir(SERVER_FILE, name, data):
-    print("?")
     if not check_file("./model.json"):
         write_json_file("./model.json", {"model": {}, "format": {}})
-        print("?")
+
     # Iniciacion
     working_dir = get_server_dir(SERVER_FILE) + "/uploads/" + name
-    if check_file(working_dir):
-        shutil.rmtree(working_dir)
+    # if check_file(working_dir):
+    #     shutil.rmtree(working_dir)
     os.makedirs(working_dir, exist_ok=True)
     write_server_file(SERVER_FILE, working_dir)
 
@@ -91,7 +90,6 @@ def new_dir(SERVER_FILE, name, data):
     csv_file = working_dir + "/" + name + ".csv"
     csv_format = json_to_csv(data, csv_file)
     del data
-    print("Csv guardado")
 
     model_file=""
     # Comprobacion de un modelo existente
@@ -100,6 +98,7 @@ def new_dir(SERVER_FILE, name, data):
         model_file = model_trainded["model"][csv_format]
     else:
         if csv_format in model_trainded["format"]:
+            print("?")
             pca_columns = model_trainded["format"][csv_format]
             model.format_csv(csv_file, pca_columns)
             model_file = model_trainded["model"][pca_columns]
@@ -107,7 +106,7 @@ def new_dir(SERVER_FILE, name, data):
             # PCA
             pca_columns = model.reduce_csv(csv_file)
             model_trainded["format"][csv_format] = pca_columns
-            print("PCA finalizado")
+
             # Traing model
             if not os.path.exists("./models"):
                 os.mkdir("./models")
@@ -115,11 +114,10 @@ def new_dir(SERVER_FILE, name, data):
             model.create_model(csv_file, model_file, working_dir)
             model_trainded["model"][pca_columns] = model_file
             write_json_file("./model.json", model_trainded)
-            print("Modelo entrenado")
     
     # Calculo de churn con el modelo
     # Creacion de clusters
-    clusters = model.make_clusters(working_dir, name)
+    # clusters = model.make_clusters(working_dir, name)
     # "churn_segment" : [porcentaje1, porcentaje2, porcentaje3],
     # sort growing / decreasing
     # "group" : [{"name" : "uno",  "percentage": 20}]
@@ -127,7 +125,7 @@ def new_dir(SERVER_FILE, name, data):
         "model_file" : model_file,
         "churn_segment" : [.20, .50, .70],
         "sort" : "growing",
-        "group" : clusters
+        "group" : [{"name": "cluster_0", "percentage": 20}, {"name": "cluster_1", "percentage": 20}]
     }
     write_json_file(working_dir + "/about.json", about)
 
