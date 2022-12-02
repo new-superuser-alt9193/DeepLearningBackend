@@ -275,8 +275,11 @@ def make_clusters(file_path, file_name):
 
         #Graficacion de los cluster
         clusters_plot = df_clusters.drop(columns=['Unnamed: 0'], errors='ignore').groupby(by=['cluster']).mean().reset_index()
+        plot_columns = clusters_plot.columns
+        print(clusters_plot)
         clusters_plot = min_max_scaler(clusters_plot)
-        plot_columns = df_clusters.columns
+        print(clusters_plot)
+        print(plot_columns)
         clusters_plot = pd.DataFrame(data=clusters_plot, columns=plot_columns)
         fig = make_subplots(rows=n, cols=1, specs = list([[{"type" : "polar"}]] * n), 
         )
@@ -392,7 +395,7 @@ def make_perfiles_info(cluster):
         if "PARTY_REV" in df_colums:
             party_rev = float(df['PARTY_REV'].sum().compute())
         else:
-            PARTY_REV = "-1"
+            party_rev = "-1"
 
         info[i] = {
             "amount" : AMOUNT,
