@@ -76,6 +76,10 @@ def set_churn_segment(x1, x2, x3, working_dir, model_file):
 # Utilidad para manejar un nuevo projecto
 # -----------------------------------------------
 def new_dir(SERVER_FILE, name, data):
+    print("?")
+    if not check_file("./model.json"):
+        write_json_file("./model.json", {"model": {}, "format": {}})
+        print("?")
     # Iniciacion
     working_dir = get_server_dir(SERVER_FILE) + "/uploads/" + name
     if check_file(working_dir):

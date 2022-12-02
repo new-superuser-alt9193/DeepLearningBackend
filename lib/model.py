@@ -132,8 +132,10 @@ def min_max_scaler(df):
 def reduce_csv(csv_file):
     df = dd.read_csv(csv_file)
     result = df[df.columns.intersection(target)]
-    df = df.drop(columns= target + ["Unnamed: 0"], errors='ignore')
-    
+    drop_columns = df.columns[df.isna().compute().sum()/ df.shape[0].compute() >= .2].tolist()
+    df = df.drop(columns= target + ["Unnamed: 0"] + drop_columns, errors='ignore')
+    df = df.fillna(df.mode().compute().iloc[0])
+
     x = getNumericDataset(df)
     columns = list(x.columns)
     x = scaler(x)
@@ -145,18 +147,17 @@ def reduce_csv(csv_file):
     for i in range(len(columns)):
         to_reduce[pca.explained_variance_ratio_[i]] = columns[i]
     to_reduce = OrderedDict(sorted(to_reduce.items(), reverse=True))
-    print(to_reduce)
+
     reduced = []
     explain_ratio = 0
     for i in to_reduce:
         if explain_ratio < .8:
             reduced.append(to_reduce[i])
             explain_ratio += i
-            print(to_reduce[i], i)
         else:
             break   
 
-    result[reduced] = df[reduced]
+    result[reduced] = x[reduced]
 
     result.to_csv(csv_file, index=False, single_file=True)
     return str(list(result.columns))
@@ -165,6 +166,8 @@ def format_csv(csv_file, pca_columns):
     pca_columns = pca_columns.replace('\'', '').replace("[", "").replace("]", "").replace(",", "").split(" ")
     df = dd.read_csv(csv_file)
     df = df[pca_columns]
+    df = df.fillna(df.mode().compute().iloc[0])
+    df = getNumericDataset(df)
     df.to_csv(csv_file, index=False, single_file=True)
 
 def create_model(csv_file, model_file, working_dir):
