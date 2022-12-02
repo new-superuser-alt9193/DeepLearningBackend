@@ -81,8 +81,8 @@ def new_dir(SERVER_FILE, name, data):
 
     # Iniciacion
     working_dir = get_server_dir(SERVER_FILE) + "/uploads/" + name
-    # if check_file(working_dir):
-    #     shutil.rmtree(working_dir)
+    if check_file(working_dir):
+        shutil.rmtree(working_dir)
     os.makedirs(working_dir, exist_ok=True)
     write_server_file(SERVER_FILE, working_dir)
 
@@ -98,7 +98,6 @@ def new_dir(SERVER_FILE, name, data):
         model_file = model_trainded["model"][csv_format]
     else:
         if csv_format in model_trainded["format"]:
-            print("?")
             pca_columns = model_trainded["format"][csv_format]
             model.format_csv(csv_file, pca_columns)
             model_file = model_trainded["model"][pca_columns]
@@ -117,7 +116,7 @@ def new_dir(SERVER_FILE, name, data):
     
     # Calculo de churn con el modelo
     # Creacion de clusters
-    # clusters = model.make_clusters(working_dir, name)
+    clusters = model.make_clusters(working_dir, name)
     # "churn_segment" : [porcentaje1, porcentaje2, porcentaje3],
     # sort growing / decreasing
     # "group" : [{"name" : "uno",  "percentage": 20}]
@@ -125,7 +124,7 @@ def new_dir(SERVER_FILE, name, data):
         "model_file" : model_file,
         "churn_segment" : [.20, .50, .70],
         "sort" : "growing",
-        "group" : [{"name": "cluster_0", "percentage": 20}, {"name": "cluster_1", "percentage": 20}]
+        "group" : clusters
     }
     write_json_file(working_dir + "/about.json", about)
 

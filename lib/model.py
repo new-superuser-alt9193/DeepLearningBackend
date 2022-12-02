@@ -25,7 +25,7 @@ from scipy.spatial.distance import cdist
 import random
 from collections import OrderedDict
 
-target = ["TARGET", "Target", "target", "CHURN", "Churn", "churn", "RESULT", "Result", "result"]
+target = ["TARGET", "Target", "target", "CHURN", "Churn", "churn", "RESULT", "Result", "result", "EXITED", "Exited", "exited"]
 # ///////////////////////////////////////////////
 #get K value for K Means
 def getK(x):
@@ -79,19 +79,14 @@ def showProbabilities(low,mid,high, proba_matrix, x):
     clients_mid = []
     clients_high = []
     i = 0
-    print(x.loc[0])
     
     #for each client in the data set
     for client in proba_matrix:
         #get all their data and their churn chance into one list
         client_index = x.index[i]
         client_info = x.loc[client_index].values
-        if i <1:
-            print(client_info)
         client_info = np.append(client_info,client[1])
         #store client data into profiles(permanent, low, mid, high) list
-        if i <1:
-            print(client_info)
         if client[1] < low:
             clients_permanent.append(client_info)
         elif client[1] < mid:
@@ -116,6 +111,7 @@ def getNumericDataset(df):
     categoricalColumns = getCategoricalColumns(df)
     numDataset = df.drop(columns= categoricalColumns, errors='ignore')
     categoricalDataset = df[categoricalColumns]
+    del df
 
     le = preprocessing.LabelEncoder()
     for i in categoricalColumns:
@@ -123,6 +119,7 @@ def getNumericDataset(df):
     
     for i in categoricalColumns:
         numDataset[i] = categoricalDataset[i]
+    del categoricalDataset
     
     return numDataset
 
@@ -161,6 +158,7 @@ def reduce_csv(csv_file):
             reduced.append(to_reduce[i])
             explain_ratio += i
         else:
+            del to_reduce
             break   
 
     result[reduced] = df[reduced]
@@ -171,15 +169,23 @@ def reduce_csv(csv_file):
 def format_csv(csv_file, pca_columns):
     pca_columns = pca_columns.replace('\'', '').replace("[", "").replace("]", "").replace(",", "").split(" ")
     df = dd.read_csv(csv_file)
-    df = df[pca_columns]
-    df = df.fillna(df.mode().compute().iloc[0])
-    df = getNumericDataset(df)
+    df = df.drop(columns=["Unnamed: 0"], errors='ignore')
+    df = df[df.columns.intersection(pca_columns)]
+    
+    x = df.drop(columns= target + ["Unnamed: 0"], errors='ignore')
+    x = x.fillna(x.mode().compute().iloc[0])
+    x = getNumericDataset(x)
+    
+    df[x.columns] = x[x.columns]
     df.to_csv(csv_file, index=False, single_file=True)
 
 def create_model(csv_file, model_file, working_dir):
     df = dd.read_csv(csv_file)
     y = df[df.columns.intersection(target)]
-    # y = y.to_dask_array(lengths=True)
+    y = y.fillna(y.mode().compute().iloc[0])
+    y = y.replace(["yes", "YES", "Yes"], 1)
+    y = y.replace(["no", "NO", "No"], 0)
+
     x = df.drop(columns= target + ["Unnamed: 0"], errors='ignore')
     # x = dd.from_array(scaler(df)).to_dask_array(lengths=True)
 
@@ -260,7 +266,7 @@ def make_clusters(file_path, file_name):
         # Une la clasificacion con los datos del dataset
         df_clusters = dd.merge(clusters, df.drop(columns=target, errors='ignore'), left_index=True, right_index=True)
 
-        df_clusters = dd.merge(df_clusters, df[['TARGET']], left_index=True, right_index=True)
+        df_clusters = dd.merge(df_clusters, df[df.columns.intersection(target)], left_index=True, right_index=True)
 
         # sort the dataframe
         df_clusters = df_clusters.sort_values(by=['cluster'])
@@ -330,8 +336,6 @@ def make_perfiles(cluster, cs1, cs2, cs3, model_file):
     bill_amount = list(set(["BILL_AMOUNT", "Bill_amount", "bill_amount"]).intersection(names))
     i = 0
     for segment in segments:
-        if len(segment) > 0:
-            print(segment[0])
         df = pd.DataFrame(segment, columns = names)
 
         # Obtencion de datos y graficacion de cada perfil
