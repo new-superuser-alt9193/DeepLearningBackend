@@ -175,8 +175,10 @@ def format_csv(csv_file, pca_columns):
     x = df.drop(columns= target + ["Unnamed: 0"], errors='ignore')
     x = x.fillna(x.mode().compute().iloc[0])
     x = getNumericDataset(x)
+    merge_columns = x.columns
     
-    df[x.columns] = x[x.columns]
+    for i in merge_columns:
+        df[i] =x[i]
     df.to_csv(csv_file, index=False, single_file=True)
 
 def create_model(csv_file, model_file, working_dir):
