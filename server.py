@@ -93,7 +93,7 @@ def get_matrix_image():
     if fm.check_file(filename):
         return send_file(filename, mimetype='image/png')
     else:
-        return code_404()
+        return send_file("Archivo no encontrado.png", mimetype='image/png')
 
 @app.route('/image/cluster/<string:name>/<string:perfil>')
 def get_clusters_image(name, perfil):
@@ -107,7 +107,7 @@ def get_clusters_image(name, perfil):
     if fm.check_file(filename):
         return send_file(filename, mimetype='image/png')
     else:
-        return code_404()
+        return send_file("Archivo no encontrado.png", mimetype='image/png')
 
 @app.route('/image/cluster/polar/')
 def get_clusters_image_polar():
@@ -117,7 +117,7 @@ def get_clusters_image_polar():
     if fm.check_file(filename):
         return send_file(filename, mimetype='image/png')
     else:
-        return code_404()
+        return send_file("Archivo no encontrado.png", mimetype='image/png')
 # ///////////////////////////////////////////////
 
 if __name__ == '__main__':

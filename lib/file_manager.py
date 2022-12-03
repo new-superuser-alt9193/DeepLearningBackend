@@ -103,7 +103,7 @@ def new_dir(SERVER_FILE, name, data):
         if csv_format in model_trainded["format"]:
             pca_columns = model_trainded["format"][csv_format]
             model.format_csv(csv_file, pca_columns)
-            model_file = model_trainded["model"][pca_columns]
+            model_file = model_trainded["model"][str(pca_columns)]
         else:
             # PCA
             pca_columns = model.reduce_csv(csv_file)
@@ -114,7 +114,7 @@ def new_dir(SERVER_FILE, name, data):
                 os.mkdir("./models")
             model_file = "./models/" + name_model() +".joblib"
             model.create_model(csv_file, model_file, working_dir)
-            model_trainded["model"][pca_columns] = model_file
+            model_trainded["model"][str(pca_columns)] = model_file
             write_json_file("./model.json", model_trainded)
     
     # Calculo de churn con el modelo
