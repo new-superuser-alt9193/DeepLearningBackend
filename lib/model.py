@@ -171,8 +171,6 @@ def format_csv(csv_file, pca_columns):
     df = dd.read_csv(csv_file)
     df = df.drop(columns=["Unnamed: 0"], errors='ignore')
     df = df[df.columns.intersection(pca_columns)]
-    print(df.compute())
-    print("???")
     
     x = df.drop(columns= target + ["Unnamed: 0"], errors='ignore')
     x = x.fillna(x.mode().compute().iloc[0])
