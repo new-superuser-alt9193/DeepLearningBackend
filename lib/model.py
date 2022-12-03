@@ -25,7 +25,7 @@ from scipy.spatial.distance import cdist
 import random
 from collections import OrderedDict
 
-target = ["TARGET", "Target", "target", "CHURN", "Churn", "churn", "RESULT", "Result", "result", "EXITED", "Exited", "exited"]
+target = ["TARGET", "Target", "target", "CHURN", "Churn", "churn", "RESULT", "Result", "result", "EXITED", "Exited", "exited", "Churn?"]
 # ///////////////////////////////////////////////
 #get K value for K Means
 def getK(x):
@@ -185,8 +185,8 @@ def create_model(csv_file, model_file, working_dir):
     df = dd.read_csv(csv_file)
     y = df[df.columns.intersection(target)]
     y = y.fillna(y.mode().compute().iloc[0])
-    y = y.replace(["yes", "YES", "Yes"], 1)
-    y = y.replace(["no", "NO", "No"], 0)
+    y = y.replace(["yes", "YES", "Yes", "True"], 1)
+    y = y.replace(["no", "NO", "No", "False"], 0)
 
     x = df.drop(columns= target + ["Unnamed: 0"], errors='ignore')
     # x = dd.from_array(scaler(df)).to_dask_array(lengths=True)
